@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "xcrypt-python"
+version = "0.1.0"
+description = "Xcrypt parallel job scheduling tool"
+authors = ["Your Name <your.email@example.com>"]
+readme = "README.md"
+packages = [{include = "xcrypt_python"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
