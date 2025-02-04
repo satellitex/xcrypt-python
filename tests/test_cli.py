@@ -7,7 +7,7 @@ def test_run_command():
     result = runner.invoke(main, ['run', 'tests/test_config.yaml'])
     try:
         assert result.exit_code == 0
-        assert "Job scheduled" in result.output
-        assert "Job executed successfully" in result.output
+        assert "Job job1 executed successfully" in result.output
+        assert "Job job2 executed successfully" in result.output
     except SystemExit as e:
         assert e.code == 0
