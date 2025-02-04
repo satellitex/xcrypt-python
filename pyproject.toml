@@ -21,6 +21,9 @@ types-pyyaml = "^6.0.12.20241230"
 [tool.poetry.scripts]
 xcrypt-python = "xcrypt_python.cli:main"
 
+[tool.poetry.group.dev.dependencies]
+types-pyyaml = "^6.0.12.20241230"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
