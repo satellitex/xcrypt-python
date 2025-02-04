@@ -14,8 +14,9 @@ pytest = "^7.0"
 rich = "^13.0"
 mypy = "^1.0"
 black = "^22.0"
-flake8 = "^4.0"
+flake8 = "^5.0"
 isort = "^5.0"
+types-pyyaml = "^6.0.12.20241230"
 
 [tool.poetry.scripts]
 xcrypt-python = "xcrypt_python.cli:main"
