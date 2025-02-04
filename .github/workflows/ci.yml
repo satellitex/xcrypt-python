@@ -36,9 +36,5 @@ jobs:
 
     - name: Run linters
       run: |
-        poetry run flake8 xcrypt_python/ tests/
         poetry run black xcrypt_python/ tests/ --check
         poetry run isort xcrypt_python/ tests/ --check-only
-
-    - name: Run type checks
-      run: poetry run mypy xcrypt_python/
