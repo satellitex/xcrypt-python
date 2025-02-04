@@ -7,8 +7,19 @@ readme = "README.md"
 packages = [{include = "xcrypt_python"}]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
+click = "^8.0"
+pyyaml = "^6.0"
+pytest = "^7.0"
+rich = "^13.0"
+mypy = "^1.0"
+black = "^22.0"
 
+[tool.poetry.scripts]
+xcrypt-python = "xcrypt_python.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
 
 [build-system]
 requires = ["poetry-core"]
