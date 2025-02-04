@@ -4,7 +4,7 @@ scheduler:
 jobs:
   - name: job1
     type: shell
-    command: echo "Hello, World!"
+    command: echo "Job job1 executed successfully"
   - name: job2
     type: shell
-    command: echo "This is job 2"
+    command: echo "Job job2 executed successfully"
