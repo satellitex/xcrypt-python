@@ -1,6 +1,7 @@
 import pytest
 from xcrypt_python.scheduler import JobScheduler
 from xcrypt_python.job import Job
+import subprocess
 
 @pytest.fixture
 def scheduler_config():
@@ -32,7 +33,7 @@ def test_scheduler_run(scheduler_config, job_config):
     scheduler = JobScheduler(scheduler_config)
     job = Job(job_config)
     scheduler.schedule(job)
-    scheduler.run()
-    # Here you would implement the logic to test the run method
-    # For now, we'll just call it to ensure it doesn't raise an exception
+    result = subprocess.run(job.command, shell=True, capture_output=True, text=True)
+    assert result.returncode == 0
+    assert result.stdout.strip() == "Hello, World!"
     scheduler.run()

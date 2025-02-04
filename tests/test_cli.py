@@ -8,5 +8,6 @@ def test_run_command():
     try:
         assert result.exit_code == 0
         assert "Job scheduled" in result.output
+        assert "Job executed successfully" in result.output
     except SystemExit as e:
         assert e.code == 0

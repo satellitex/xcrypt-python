@@ -1,5 +1,6 @@
 import pytest
 from xcrypt_python.job import Job
+import subprocess
 
 @pytest.fixture
 def job_config():
@@ -17,6 +18,7 @@ def test_job_initialization(job_config):
 
 def test_job_run(job_config):
     job = Job(job_config)
-    # Here you would implement the logic to test the run method
-    # For now, we'll just call it to ensure it doesn't raise an exception
+    result = subprocess.run(job.command, shell=True, capture_output=True, text=True)
+    assert result.returncode == 0
+    assert result.stdout.strip() == "Hello, World!"
     job.run()

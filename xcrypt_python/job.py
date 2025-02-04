@@ -1,3 +1,5 @@
+import subprocess
+
 class Job:
     def __init__(self, job_config):
         self.name = job_config.get("name")
@@ -5,5 +7,8 @@ class Job:
         self.schedule = job_config.get("schedule")
 
     def run(self):
-        # Implement the logic to run the job
-        pass
+        result = subprocess.run(self.command, shell=True, capture_output=True, text=True)
+        if result.returncode == 0:
+            print(f"Job {self.name} executed successfully")
+        else:
+            print(f"Job {self.name} failed with error: {result.stderr}")
