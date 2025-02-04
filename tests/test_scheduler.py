@@ -1,6 +1,7 @@
 import pytest
-from xcrypt_python.scheduler import JobScheduler
+
 from xcrypt_python.job import Job
+from xcrypt_python.scheduler import JobScheduler
 
 
 @pytest.fixture

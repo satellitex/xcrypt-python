@@ -1,7 +1,8 @@
 import click
+
+from xcrypt_python.config import Config
 from xcrypt_python.job import Job
 from xcrypt_python.scheduler import JobScheduler
-from xcrypt_python.config import Config
 from xcrypt_python.utils import setup_logging
 
 

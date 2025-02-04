@@ -1,4 +1,5 @@
 import pytest
+
 from xcrypt_python.job import Job
 
 
