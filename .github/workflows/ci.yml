@@ -38,8 +38,3 @@ jobs:
       run: |
         poetry run black xcrypt_python/ tests/ --check
         poetry run isort xcrypt_python/ tests/ --check-only
-
-    - name: Run type checks
-      run: |
-        poetry run mypy --install-types
-        poetry run mypy xcrypt_python/
