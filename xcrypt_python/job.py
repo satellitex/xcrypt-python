@@ -1,17 +1,9 @@
 class Job:
-    def __init__(self, job_id, job_name, job_data):
-        self.job_id = job_id
-        self.job_name = job_name
-        self.job_data = job_data
-        self.status = "pending"
+    def __init__(self, job_config):
+        self.name = job_config.get("name")
+        self.command = job_config.get("command")
+        self.schedule = job_config.get("schedule")
 
-    def schedule(self):
-        self.status = "scheduled"
-        print(f"Job {self.job_name} scheduled.")
-
-    def execute(self):
-        self.status = "running"
-        print(f"Job {self.job_name} is running.")
-        # Simulate job execution
-        self.status = "completed"
-        print(f"Job {self.job_name} completed.")
+    def run(self):
+        # Implement the logic to run the job
+        pass

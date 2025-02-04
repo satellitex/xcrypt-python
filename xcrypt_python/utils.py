@@ -1,14 +1,13 @@
 import logging
 
-def setup_logging(log_file):
-    logging.basicConfig(filename=log_file, level=logging.INFO,
-                        format='%(asctime)s - %(levelname)s - %(message)s')
+def setup_logging(log_level):
+    logging.basicConfig(level=log_level)
+    logger = logging.getLogger(__name__)
+    return logger
 
-def log_info(message):
-    logging.info(message)
-
-def log_error(message):
-    logging.error(message)
-
-def log_warning(message):
-    logging.warning(message)
+def validate_config(config):
+    required_keys = ['log_level', 'scheduler', 'jobs']
+    for key in required_keys:
+        if key not in config:
+            raise ValueError(f"Missing required config key: {key}")
+    return True

@@ -2,20 +2,8 @@ import pytest
 from click.testing import CliRunner
 from xcrypt_python.cli import main
 
-def test_start():
+def test_run_command():
     runner = CliRunner()
-    result = runner.invoke(main, ['start'])
+    result = runner.invoke(main, ['run', 'tests/test_config.yaml'])
     assert result.exit_code == 0
-    assert 'Starting a job...' in result.output
-
-def test_stop():
-    runner = CliRunner()
-    result = runner.invoke(main, ['stop'])
-    assert result.exit_code == 0
-    assert 'Stopping a job...' in result.output
-
-def test_status():
-    runner = CliRunner()
-    result = runner.invoke(main, ['status'])
-    assert result.exit_code == 0
-    assert 'Checking job status...' in result.output
+    assert "Job scheduled" in result.output

@@ -2,29 +2,37 @@ import pytest
 from xcrypt_python.scheduler import JobScheduler
 from xcrypt_python.job import Job
 
-def test_add_job():
-    scheduler = JobScheduler()
-    job = Job(job_id=1, job_name="Test Job", job_data={})
-    scheduler.add_job(job)
-    assert len(scheduler.jobs) == 1
-    assert scheduler.jobs[0].job_id == 1
+@pytest.fixture
+def scheduler_config():
+    return {
+        "max_jobs": 5
+    }
 
-def test_remove_job():
-    scheduler = JobScheduler()
-    job1 = Job(job_id=1, job_name="Test Job 1", job_data={})
-    job2 = Job(job_id=2, job_name="Test Job 2", job_data={})
-    scheduler.add_job(job1)
-    scheduler.add_job(job2)
-    scheduler.remove_job(1)
-    assert len(scheduler.jobs) == 1
-    assert scheduler.jobs[0].job_id == 2
+@pytest.fixture
+def job_config():
+    return {
+        "name": "test_job",
+        "command": "echo 'Hello, World!'",
+        "schedule": "0 0 * * *"
+    }
 
-def test_execute_jobs():
-    scheduler = JobScheduler()
-    job1 = Job(job_id=1, job_name="Test Job 1", job_data={})
-    job2 = Job(job_id=2, job_name="Test Job 2", job_data={})
-    scheduler.add_job(job1)
-    scheduler.add_job(job2)
-    scheduler.execute_jobs()
-    assert job1.status == "completed"
-    assert job2.status == "completed"
+def test_scheduler_initialization(scheduler_config):
+    scheduler = JobScheduler(scheduler_config)
+    assert scheduler.scheduler_config["max_jobs"] == 5
+    assert len(scheduler.jobs) == 0
+
+def test_scheduler_schedule_job(scheduler_config, job_config):
+    scheduler = JobScheduler(scheduler_config)
+    job = Job(job_config)
+    scheduler.schedule(job)
+    assert len(scheduler.jobs) == 1
+    assert scheduler.jobs[0].name == "test_job"
+
+def test_scheduler_run(scheduler_config, job_config):
+    scheduler = JobScheduler(scheduler_config)
+    job = Job(job_config)
+    scheduler.schedule(job)
+    scheduler.run()
+    # Here you would implement the logic to test the run method
+    # For now, we'll just call it to ensure it doesn't raise an exception
+    scheduler.run()

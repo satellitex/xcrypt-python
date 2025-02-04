@@ -1,47 +1,74 @@
-# Architecture
+# Xcrypt-Python Architecture
 
 ## Overview
-
-Xcrypt-Python is designed to be a flexible and extensible job scheduling and management system. The system is built using Python and leverages several libraries to provide a robust and user-friendly experience.
+Xcrypt-Python is a job scheduling and management system designed to handle parallel job execution. The system is built using Python and leverages various libraries to provide a robust and flexible solution for job scheduling.
 
 ## Components
 
-### 1. **Job Class (`job.py`)**
-The `Job` class is responsible for creating and managing individual jobs. Each job has a unique ID, name, and associated data. The class provides methods for scheduling and executing jobs.
+### 1. CLI (`xcrypt_python/cli.py`)
+The CLI is the entry point for interacting with the Xcrypt-Python system. It uses the `Click` library to provide a user-friendly command-line interface. The CLI allows users to run jobs based on a configuration file.
 
-### 2. **JobScheduler Class (`scheduler.py`)**
-The `JobScheduler` class is responsible for managing the scheduling and execution of jobs. It maintains a list of jobs and provides methods for adding, removing, and executing jobs.
+### 2. Job (`xcrypt_python/job.py`)
+The `Job` class is responsible for defining and managing individual jobs. Each job has a name, command, and schedule. The `run` method is used to execute the job.
 
-### 3. **Configuration Management (`config.py`)**
-The configuration management component is responsible for reading and writing configuration files. It uses the `pyyaml` library to handle YAML files, allowing users to easily manage their configuration settings.
+### 3. JobScheduler (`xcrypt_python/scheduler.py`)
+The `JobScheduler` class is responsible for scheduling and running jobs. It maintains a list of jobs and provides methods to schedule and run them.
 
-### 4. **CLI Interface (`cli.py`)**
-The CLI interface provides a command-line interface for interacting with the system. It uses the `Click` library to define commands and handle user input. The CLI allows users to start, stop, and check the status of jobs.
+### 4. Config (`xcrypt_python/config.py`)
+The `Config` class is responsible for loading and managing configuration settings from a YAML file. It provides methods to access various configuration options, such as log level, scheduler settings, and job definitions.
 
-### 5. **Utility Functions (`utils.py`)**
-The utility functions provide common functionality that is used throughout the system. This includes logging, error handling, and other helper functions.
+### 5. Utils (`xcrypt_python/utils.py`)
+The `utils.py` file contains utility functions that are used throughout the system. These functions include logging setup and other common tasks.
 
-## Design Principles
-
-### 1. **Modularity**
-The system is designed to be modular, with each component responsible for a specific aspect of the system. This makes it easy to extend and maintain the system.
-
-### 2. **Extensibility**
-The system is designed to be extensible, allowing users to add new features and functionality as needed. This is achieved through the use of well-defined interfaces and a flexible architecture.
-
-### 3. **Testability**
-The system is designed to be testable, with comprehensive unit tests provided for each component. This ensures that the system works as expected and makes it easy to identify and fix issues.
+## Workflow
+1. The user interacts with the CLI to run jobs based on a configuration file.
+2. The `Config` class loads the configuration settings from the specified YAML file.
+3. The `JobScheduler` class schedules the jobs based on the configuration settings.
+4. The `Job` class defines and manages individual jobs.
+5. The `JobScheduler` class runs the scheduled jobs.
 
 ## Dependencies
+- `Click`: Used for creating the CLI.
+- `PyYAML`: Used for loading configuration settings from YAML files.
+- `pytest`: Used for running tests.
+- `rich`: Used for providing colored output in the CLI.
+- `mypy`: Used for type checking.
+- `black`: Used for code formatting.
+- `flake8`: Used for linting.
+- `isort`: Used for sorting imports.
 
-- **Python 3.8**: The system is built using Python 3.8.
-- **Click**: Used for the CLI interface.
-- **PyYAML**: Used for configuration management.
-- **pytest**: Used for unit testing.
-- **rich**: Used for CLI color output.
-- **mypy**: Used for type checking.
-- **black**: Used for code formatting.
-
-## Conclusion
-
-Xcrypt-Python is a powerful and flexible job scheduling and management system. Its modular and extensible design makes it suitable for a wide range of use cases, and its comprehensive testing ensures that it works as expected. By leveraging popular Python libraries, the system provides a robust and user-friendly experience.
+## Directory Structure
+```
+Xcrypt-Python/
+│── .github/
+│   ├── workflows/
+│   │   ├── ci.yml
+│── xcrypt_python/
+│   ├── __init__.py
+│   ├── cli.py
+│   ├── job.py
+│   ├── scheduler.py
+│   ├── config.py
+│   ├── utils.py
+│── tests/
+│   ├── __init__.py
+│   ├── test_job.py
+│   ├── test_scheduler.py
+│   ├── test_cli.py
+│── scripts/
+│   ├── setup_env.sh
+│   ├── run_linter.sh
+│── docs/
+│   ├── index.md
+│   ├── usage.md
+│   ├── architecture.md
+│── examples/
+│   ├── example1.py
+│   ├── example2.yaml
+│── .gitignore
+│── .pre-commit-config.yaml
+│── pyproject.toml
+│── poetry.lock
+│── README.md
+│── LICENSE
+```

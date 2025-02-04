@@ -1,14 +1,28 @@
+import click
+from xcrypt_python.config import Config
 from xcrypt_python.job import Job
 from xcrypt_python.scheduler import JobScheduler
+from xcrypt_python.utils import setup_logging
 
-# Create a job
-job1 = Job(job_id=1, job_name="Example Job", job_data={"param1": "value1"})
+@click.command()
+@click.option('--config', default='example2.yaml', help='Path to the configuration file.')
+def main(config):
+    # Load configuration
+    config = Config(config)
+    
+    # Setup logging
+    logger = setup_logging(config.log_level)
+    
+    # Initialize scheduler
+    scheduler = JobScheduler(config.scheduler)
+    
+    # Add jobs to scheduler
+    for job_config in config.jobs:
+        job = Job(job_config)
+        scheduler.schedule(job)
+    
+    # Run scheduler
+    scheduler.run()
 
-# Create a scheduler
-scheduler = JobScheduler()
-
-# Add job to scheduler
-scheduler.add_job(job1)
-
-# Execute jobs in scheduler
-scheduler.execute_jobs()
+if __name__ == '__main__':
+    main()

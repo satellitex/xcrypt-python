@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Run flake8 for linting
+# Run flake8
 poetry run flake8 xcrypt_python/ tests/
 
-# Run black for code formatting
+# Run black
 poetry run black xcrypt_python/ tests/ --check
 
-# Run isort for import sorting
+# Run isort
 poetry run isort xcrypt_python/ tests/ --check-only

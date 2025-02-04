@@ -1,23 +1,18 @@
 #!/bin/bash
 
-# 開発環境のセットアップスクリプト
+# Update and install necessary packages
+sudo apt-get update
+sudo apt-get install -y python3 python3-pip
 
-# Poetry のインストール
-pip install poetry
+# Install Poetry
+curl -sSL https://install.python-poetry.org | python3 -
 
-# 仮想環境の作成 & 依存関係のインストール
+# Add Poetry to PATH
+export PATH="$HOME/.local/bin:$PATH"
+
+# Install project dependencies
 poetry install
 
-# pre-commit のインストール
-poetry run pre-commit install
-
-# Linter のインストール
-poetry add --dev flake8 black isort
-
-# テストフレームワークのインストール
-poetry add --dev pytest
-
-# 型チェックツールのインストール
-poetry add --dev mypy
-
-echo "開発環境のセットアップが完了しました。"
+# Verify installation
+poetry --version
+python3 --version

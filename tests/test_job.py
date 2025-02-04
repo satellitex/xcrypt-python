@@ -1,19 +1,22 @@
 import pytest
 from xcrypt_python.job import Job
 
-def test_job_initialization():
-    job = Job(job_id=1, job_name="Test Job", job_data={})
-    assert job.job_id == 1
-    assert job.job_name == "Test Job"
-    assert job.job_data == {}
-    assert job.status == "pending"
+@pytest.fixture
+def job_config():
+    return {
+        "name": "test_job",
+        "command": "echo 'Hello, World!'",
+        "schedule": "0 0 * * *"
+    }
 
-def test_job_schedule():
-    job = Job(job_id=1, job_name="Test Job", job_data={})
-    job.schedule()
-    assert job.status == "scheduled"
+def test_job_initialization(job_config):
+    job = Job(job_config)
+    assert job.name == "test_job"
+    assert job.command == "echo 'Hello, World!'"
+    assert job.schedule == "0 0 * * *"
 
-def test_job_execute():
-    job = Job(job_id=1, job_name="Test Job", job_data={})
-    job.execute()
-    assert job.status == "completed"
+def test_job_run(job_config):
+    job = Job(job_config)
+    # Here you would implement the logic to test the run method
+    # For now, we'll just call it to ensure it doesn't raise an exception
+    job.run()

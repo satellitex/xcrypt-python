@@ -1,17 +1,10 @@
-# Example YAML configuration for Xcrypt-Python
-
-jobs:
-  - job_id: 1
-    job_name: "Example Job 1"
-    job_data:
-      param1: "value1"
-      param2: "value2"
-  - job_id: 2
-    job_name: "Example Job 2"
-    job_data:
-      param1: "value3"
-      param2: "value4"
-
+log_level: INFO
 scheduler:
-  max_jobs: 5
-  retry_on_failure: true
+  type: simple
+jobs:
+  - name: job1
+    type: shell
+    command: echo "Hello, World!"
+  - name: job2
+    type: shell
+    command: echo "This is job 2"
