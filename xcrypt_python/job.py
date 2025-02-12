@@ -7,4 +7,5 @@ class Job:
 
     def run(self):
         # Implement the logic to run the job
+        print(self.command)
         pass
