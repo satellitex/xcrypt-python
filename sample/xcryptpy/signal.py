@@ -1,6 +1,3 @@
-Python Code:
-
-```python
 from xcrypt_python.lib import Xcrypt
 
 # A sample of user defined signal handler.
@@ -30,6 +27,3 @@ template = {
     'after': lambda self: print("{} finished".format(self['id'])) 
     }
 Xcrypt.prepare_submit_sync(template)
-```
-
-Please ensure that you have the required `xcrypt_python` library installed and configured correctly in your Python environment. Also, please adapt the `Xcrypt` interface to match your actual library if the name in the task is illustrative. This translated code assumes that the Xcrypt library for Python provides similar functionality and interface as the PERL version.

@@ -1,6 +1,3 @@
-Here is the converted Python code using Xcrypt-Python:
-
-```python
 # A sample of submitting jobs for MIC systems in the native mode
 # Derived from fib-eval.xcr.
 from xcrypt_python.lib import Xcrypt, initialize, prepare_submit_sync
@@ -25,6 +22,3 @@ def submit_job():
     )
 
 submit_job()
-```
-
-Please Note: Since Python uses zero-indexing, be sure to adjust accordingly when accessing elements in list as compared from Perl script which uses one-indexing. Also, Python does not support `..` operator for ranges as Perl does. Replace it with the `range()` function adjusted to your liking.

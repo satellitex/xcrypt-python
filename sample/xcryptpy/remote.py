@@ -1,7 +1,3 @@
-Below is the equivalent Python code for the provided Perl code:
-
-```python
-# Import necessary xcrypt library
 from xcrypt_python.lib import Xcrypt
 
 @Xcrypt
@@ -33,6 +29,3 @@ def job_submission():
 
 # Call the function
 job_submission()
-```
-
-Please note: Python doesn't have the exact equivalent of Perl's sub syntax, a lambda function is used in this conversion, be sure that the usage fits appropriately.

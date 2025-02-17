@@ -1,6 +1,3 @@
-Here is the equivalent Python code:
-
-```python
 # Xcrypt-Python Code:
 # A sample of repeat(): user defined timer events
 from xcrypt_python.lib import Xcrypt
@@ -38,10 +35,3 @@ def sync(jobs):  # Converted Perl array to Python list
     pass
 
 sync(jobs)
-```
-
-Note:
-- As Python has no Perl's "&" (ampersand) call for calling subroutines or functions, we replace it by normal function calls.
-- Also, anonymous functions (or lambdas in Python) can only contain expressions, not statements. So, print statements must be wrapped into functions to keep logical equivalency.
-- Some Perl keywords or in-build functions might not translate directly into Python. It is assumed that this Python code will also make use of an `Xcrypt` Python library that provides the necessary functionality.
-- This translation assumes that functions like `repeat` and `sync` are instance methods of the objects decorated by the `Xcrypt` decorator. It also assumes that their implementations exist in such a format.

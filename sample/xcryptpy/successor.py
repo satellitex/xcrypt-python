@@ -1,6 +1,3 @@
-Python Code:
-
-```python
 # Import xcrypt library
 from xcrypt_python.lib import Xcrypt
 
@@ -25,17 +22,7 @@ def prepare_submit_sync():
     }
 
     # Submit and synchronize jobs
-    job_submit_sync(parent)
+    core.prepare_submit_sync(parent, child1, child2)
 
 # Call the function to prepare and submit jobs
 prepare_submit_sync()
-```
-Please note:
-
-1. The Perl function prepare_submit_sync is replaced with a Python function having the same name.
-
-2. Perl hashes (%) are replaced with Python dictionaries.
-
-3. Perl arrays (@) are replaced with Python lists.
-
-4. The function call &prepare_submit_sync(%parent); is replaced with the Python equivalent prepare_submit_sync().

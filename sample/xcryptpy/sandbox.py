@@ -1,6 +1,3 @@
-Python Code:
-
-```Python
 from xcrypt_python.lib import Xcrypt
 
 @Xcrypt
@@ -20,5 +17,3 @@ def job_sandbox():
         'after': lambda self: print(f"{self['id']} finished")
     }
     prepare_submit_sync(template)
-```
-Please note that Python's `range()` function is used to replicate Perl's `..` syntax for creating a list of numbers. Also, the Perl subroutines are translated into Python lambdas for inline functions. The `$self->{id}` in Perl is translated to `self['id']` in Python.
