@@ -1,7 +1,9 @@
 from xcrypt_python.lib import Xcrypt
 
 @Xcrypt
-def submit_job():
+def range():
+    from qw import core
+
     template = {
         'id': 'jobrng',
         'RANGE0': [30,40],
@@ -15,4 +17,5 @@ def submit_job():
         'before': lambda self: print(f"Submitting {self['id']}"),
         'after': lambda self: print(f"{self['id']} finished")
     }
-    prepare_submit_sync(template)
+    
+    core.prepare_submit_sync(template)

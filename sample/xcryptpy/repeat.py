@@ -2,36 +2,21 @@
 # A sample of repeat(): user defined timer events
 from xcrypt_python.lib import Xcrypt
 
-template = {
-    'id'   : 'jobrep',
-    'exe0' : 'sleep 10'
-}
-
 @Xcrypt
-def prepare_submit(template):
-    jobs = [template]
-    return jobs
+def repeat():
+# A sample of repeat(): user defined timer events
+    from qw import core
 
-jobs = prepare_submit(template)
+    template = {
+        'id': 'jobrep',
+        'exe0': 'sleep 10'
+    }
 
-@Xcrypt
-def print_foo():  # Converted Perl anonymous function to Python function
-    print("foo")
+    jobs = core.prepare_submit(template)
 
-print_foo.repeat()  # The specified statement is evaluated every n seconds
-                     # (n is the system-defined default value. You can specify n
-                     # explicitly by the second argument)
-                
-bar = 'baz'  # Converted Perl scalar to Python variable
+    core.repeat('print "foo\n";')
 
-@Xcrypt
-def print_bar():
-    print(bar)
-    
-print_bar.repeat(3)  # You can also define a timer event as a function.
+    bar = 'baz'
+    core.repeat(lambda: print(f"{bar}\n"), 3)
 
-@Xcrypt
-def sync(jobs):  # Converted Perl array to Python list
-    pass
-
-sync(jobs)
+    core.sync(jobs)

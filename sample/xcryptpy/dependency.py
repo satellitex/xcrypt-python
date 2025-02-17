@@ -10,7 +10,7 @@ def dependency():
     # If you want use the limit module in addition, use the followings
     from qw import dependency, limit, core # (limit dependency core) does not work!
     
-    limit::initialize (1);
+    limit.initialize (1)
 
     template = {
         'id': 'jobdep',
