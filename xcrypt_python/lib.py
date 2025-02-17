@@ -1,15 +1,10 @@
-import inspect
 import ast
+import inspect
 import functools
 
 class XcryptTransformer(ast.NodeVisitor):
     def __init__(self):
         self.xcrypt_code = []
-
-    def visit_Import(self, node):
-        for alias in node.names:
-            self.xcrypt_code.append(f"use {alias.name};")
-        self.generic_visit(node)
 
     def visit_ImportFrom(self, node):
         for alias in node.names:
@@ -38,7 +33,7 @@ class XcryptTransformer(ast.NodeVisitor):
         elif isinstance(expr, ast.UnaryOp):
             return f"({self._op_to_str(expr.op)}{self._expr_to_str(expr.operand)})"
         elif isinstance(expr, ast.BoolOp):
-            return f" ({' '.join(self._op_to_str(expr.op).join(self._expr_to_str(v) for v in expr.values))}) "
+            return f" ({' '.join(self._expr_to_str(v) for v in expr.values)}) "
         elif isinstance(expr, ast.Lambda):
             return f"sub {{ {self._expr_to_str(expr.body)} }}"
         elif isinstance(expr, ast.IfExp):
@@ -58,10 +53,11 @@ class XcryptTransformer(ast.NodeVisitor):
             return f"{self._expr_to_str(expr.value)}->{expr.attr}"
         elif isinstance(expr, ast.Subscript):
             return f"{self._expr_to_str(expr.value)}[{self._expr_to_str(expr.slice)}]"
-        elif isinstance(expr, ast.ListComp) or isinstance(expr, ast.SetComp) or isinstance(expr, ast.DictComp) or isinstance(expr, ast.GeneratorExp):
-            return "LIST_COMPREHENSION_UNSUPPORTED"
+        elif isinstance(expr, ast.Slice):
+            return f"{self._expr_to_str(expr.lower)}:{self._expr_to_str(expr.upper)}:{self._expr_to_str(expr.step)}"
+        elif isinstance(expr, ast.Tuple):
+            return "(" + ", ".join(self._expr_to_str(e) for e in expr.elts) + ")"
         return "UNKNOWN_EXPR"
-
 
     def _op_to_str(self, op):
         if isinstance(op, ast.Add):
@@ -72,6 +68,26 @@ class XcryptTransformer(ast.NodeVisitor):
             return "*"
         elif isinstance(op, ast.Div):
             return "/"
+        elif isinstance(op, ast.Mod):
+            return "%"
+        elif isinstance(op, ast.Pow):
+            return "**"
+        elif isinstance(op, ast.Eq):
+            return "=="
+        elif isinstance(op, ast.NotEq):
+            return "!="
+        elif isinstance(op, ast.Lt):
+            return "<"
+        elif isinstance(op, ast.LtE):
+            return "<="
+        elif isinstance(op, ast.Gt):
+            return ">"
+        elif isinstance(op, ast.GtE):
+            return ">="
+        elif isinstance(op, ast.And):
+            return "&&"
+        elif isinstance(op, ast.Or):
+            return "||"
         return "UNKNOWN_OP"
 
     def transform(self, tree):
