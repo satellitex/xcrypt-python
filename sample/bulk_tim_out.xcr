@@ -1,24 +1,23 @@
-use base qw(bulk);
-use base qw(core);
-
+use base qw(bulk core);
 &bulk->initialize();
-
-my $template = (''RANGE0'' => [30, 40], ''RANGE1'' => &list(&range(5)), ''id'' => 'jobbulktime', ''exe0'' => 'bin/fib', ''arg0_0@'' => sub { (VALUE[0] + VALUE[1]) }, ''time@'' => sub { (2 UNKNOWN_OP ((VALUE[0] + VALUE[1]) - 30)) });
-
-&list(&range(5));
-
+my $template = (
+    'RANGE0'  => [ 30, 40 ],
+    'RANGE1'  => &list( &range(5) ),
+    'id'      => jobbulktime,
+    'exe0'    => bin / fib,
+    'arg0_0@' => sub { ( VALUE [0] +VALUE [1] ) },
+    'time@'   => sub { ( 2**( ( VALUE [0] +VALUE [1] ) - 30 ) ) }
+);
+&list( &range(5) );
 &range(5);
-
 my $jobs = &core->prepare(template);
-
 &core->prepare(template);
+&print( ID \testimated time );
 
-&print('ID              \testimated time');
-
-&print(UNKNOWN_EXPR);
-
-my $bulkedjobs = &bulk->bulk('bulktim', jobs);
-
-&bulk->bulk('bulktim', jobs);
+foreach my $j (@jobs) {
+    &print( sprintf( '%s        %s', j [id], j [time] ) );
+}
+my $bulkedjobs = &bulk->bulk( bulktim, jobs );
+&bulk->bulk( bulktim, jobs );
 &core->submit(bulkedjobs);
 &core->sync(bulkedjobs);

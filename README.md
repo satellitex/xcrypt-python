@@ -33,6 +33,21 @@ poetry install
 poetry shell
 ```
 
+## `perltidy` のインストール
+本プロジェクトでは、Xcrypt で生成された Perl コードを整形するために `perltidy` を使用します。
+`perltidy` をインストールするには、以下のコマンドを実行してください。
+
+```sh
+cpan install Perl::Tidy
+```
+
+または、以下の方法でもインストールできます。
+
+```sh
+sudo apt-get install perltidy  # Ubuntu/Debian
+brew install perltidy          # macOS
+```
+
 ## 使い方
 Xcrypt Transformer を使用して Python コードを Xcrypt に変換するには、
 関数に `@Xcrypt` デコレータを付けて実行してください。

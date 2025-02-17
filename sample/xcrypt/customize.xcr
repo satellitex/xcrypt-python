@@ -1,0 +1,39 @@
+# A sample of add_key()
+use base qw(core);
+
+# &nocheck_separator();
+# &set_separator('-');
+
+# Add user defined job parameters
+&add_key('added0', 'added1');
+# Any member names prefixed by 'prefix' are validated..
+&add_prefix_of_key('prefix');
+
+my @jobs = &prepare(
+    'id' => 'jobcustom',
+    'exe0' => 'echo',
+    'arg0_0@' => sub { $VALUE[0]; },
+    'RANGE0' => [0..3],
+    # User-defined members added by add_key()
+    'added0' => 100,
+    'added1@' => sub { $VALUE[0] + 10; },
+    'prefix0' => 300,
+    'prefix1@' => sub { $VALUE[0] + 30; },
+    # Member names prefixed by ':' can be used without add_key()
+    ':auto0' => 0,
+    ':auto1@' => sub { $VALUE[0]; },
+    # These members are ignored and cause warning because these are used without add_key()
+    'unadd0' => 200,
+    'unadd1@' => sub { $VALUE[0] + 20; }
+    );
+
+foreach my $j (@jobs) {
+    print $j->{id}."\n";
+    foreach my $p (':auto0', ':auto1', 'added0', 'added1',
+                   'prefix0', 'prefix1', 'unadd0', 'unadd1') {
+	print "$p:\t" . $j->{"$p"} . "\n";
+    }
+}
+
+&submit(@jobs);
+&sync(@jobs);

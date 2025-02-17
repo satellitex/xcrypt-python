@@ -1,8 +1,8 @@
-from xcrypt_python.lib import execute, Xcrypt
+from xcrypt_python.lib import Xcrypt
 
 
 @Xcrypt
-def sample():
+def bulk_tim():
     # A sample of unifying multiple jobs into a bulk job using the bulk.pm module.
     # Limit the number of jos in each bulk job up to 3.
     from qw import bulk, core
@@ -30,4 +30,4 @@ def sample():
     core.sync(bulkedjobs)
 
 if __name__ == '__main__':
-    sample()
+    bulk_tim()

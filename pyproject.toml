@@ -16,6 +16,8 @@ mypy = "^1.14.1"
 black = "^25.1.0"
 flake8 = "^7.1.1"
 isort = "^6.0.0"
+openai = "^1.63.0"
+python-dotenv = "^1.0.1"
 
 [tool.poetry.scripts]
 xcrypt-python = "xcrypt_python.cli:main"

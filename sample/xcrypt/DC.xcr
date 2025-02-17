@@ -1,0 +1,96 @@
+# Sample of DC.pm module (Divide and Conquer)
+# Compute Fib(n) by dividing a job for Fib(n) into jobs for Fib(n-1) and Fib(n-2) recursively
+use base qw(DC core);
+use strict;
+
+my $n = 13;
+my $threshold = 10;
+
+# Returns 1 (true) if the $job can be divided into equivalent multiple jobs.
+# Returns 0 (false) otherwise.
+sub can_divde
+{
+	my $job = shift;
+	print "User function"."\n";
+	if($job->{arg0_0} > $threshold)
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+# Divides $job into equivalent multiple jobs and returns an array of them.
+sub divide
+{
+	my $job = shift;
+	print "User Function divide"."\n";
+
+	my %j1 = (
+		'id' => $job->{id}."_".($job->{arg0_0}-1),
+		'exe0' => $job->{exe0},
+		'arg0_0' => $job->{arg0_0}-1,
+		'canDivideFunc' => $job->{canDivideFunc},
+		'divideFunc' => $job->{divideFunc},
+		'mergeFunc' => $job->{mergeFunc},
+	);
+	my %j2 = (
+		'id' => $job->{id}."_".($job->{arg0_0}-2),
+		'exe0' => $job->{exe0},
+		'arg0_0' => $job->{arg0_0}-2,
+		'canDivideFunc' => $job->{canDivideFunc},
+		'divideFunc' => $job->{divideFunc},
+		'mergeFunc' => $job->{mergeFunc},
+	);
+	my @children = ();
+	push(@children, prepare(%j1));
+	push(@children, prepare(%j2));
+	print "parent: $job->{id}\n";
+	print "child: $children[0]->{id}\n";
+	print "child: $children[1]->{id}\n";
+	return @children;
+}
+
+# Merges the results of @children jobs as the result of the $parent job.
+sub merge
+{
+	my ($parent, @children) = @_;
+	print "User Function merge"."\n";
+	my $val = 0;
+	foreach my $child (@children)
+	{
+	    my $ans = read_output_file ($child->{JS_stdout});
+	    $val += $ans;
+	    print "CHILD: $child->{id} -> $ans\n";
+	}
+	open(OUT,">".$parent->{JS_stdout});
+	print OUT "$val\n";
+	close(OUT);
+	print "PARENT: $parent->{id} -> $val\n";
+}
+
+sub read_output_file {
+    my $file = shift;
+    open(FH, '<', $file);
+    my $line = <FH>;
+    chomp ($line);
+    close(FH);
+    return $line;
+}
+
+my %template = (
+    'id' => 'jobDC',
+    'exe0' => "$ENV{'XCRYPT'}/sample/bin/fib-stdo",
+    'arg0_0' => $n,
+    'canDivideFunc' => \&can_divde,
+    'divideFunc' => \&divide,
+    'mergeFunc' => \&merge,
+);
+
+my @jobs = &prepare_submit_sync(%template);
+my $result = read_output_file ($jobs[0]->{JS_stdout});
+
+print "Fib($n) = $result\n";
+
