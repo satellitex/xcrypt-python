@@ -435,9 +435,9 @@ if ($self->{result}) {
 """
     assert format_perl_code(xcr_code) == format_perl_code(expected_code)
 
-def test_signal_conversion():
-    from sample.xcryptpy.signal import signal
-    xcr_code = signal()
+def test_signal_handle_conversion():
+    from sample.xcryptpy.signal_handle import signal_handle
+    xcr_code = signal_handle()
     expected_code = """
 use base qw(core);
 sub sigint_handler {
