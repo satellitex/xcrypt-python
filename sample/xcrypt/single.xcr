@@ -1,0 +1,27 @@
+# Submit just a single job.
+use base qw (core);
+
+%template = (
+    # The job name
+    'id' => 'jobsingle',
+    # Command line to be executed in the job
+    'exe0' => 'bin/fib-file dat/num40 jobsingle_out',
+    # You also can write as following.
+    # 'exe0'   => 'bin/fib-file dat/num40',
+    # 'arg0_0' => 'jobsingle_out',
+    # Specify the amount of resources
+    'JS_cpu' => 1,   # number of cores per proc
+    'JS_node' => 1,  # number of procs
+    'JS_limit_time' => 300,  # limit time (can be specified in seconds in systems of Kyoto U and U Tokyo)
+    # Exectuted before submitting a job (optional)
+    'before' => sub {
+        print "Submitting $self->{id}\n";
+    },
+    # Exectuted after the job is done (optional)
+    'after' => sub {
+        print "$self->{id} finished\n";
+    } 
+    );
+
+# Execute the job
+@jobs=&prepare_submit_sync (%template);

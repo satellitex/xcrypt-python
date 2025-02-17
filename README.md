@@ -1,96 +1,91 @@
-# Xcrypt-Python
+# Xcrypt Transformer
 
-## Overview
+## 概要
+Xcrypt Transformer は Python の AST (Abstract Syntax Tree) を解析し、
+対応する Perl (Xcrypt) コードに変換するツールです。
 
-Xcrypt-Python is a Python-based job scheduling and management system. It allows users to define, schedule, and manage jobs using a simple configuration file. The system is designed to be flexible and extensible, making it suitable for a wide range of use cases.
+## 環境構築
+本プロジェクトでは `poetry` を使用して依存関係を管理します。
 
-## Features
-
-- **Job Management**: Define and manage jobs using a configuration file.
-- **Scheduling**: Schedule jobs to run at specific times or intervals.
-- **CLI Interface**: Interact with the system using a command-line interface.
-- **Logging**: Built-in logging for monitoring job execution.
-- **Extensibility**: Easily extend the system with custom job types and schedulers.
-
-## Directory Structure
-
-The project follows a structured directory layout to organize the code and resources effectively:
-
-```
-Xcrypt-Python/
-│── .github/                 # GitHub Actions and Issue Templates
-│   ├── workflows/
-│   │   ├── ci.yml           # CI/CD workflow
-│── xcrypt_python/           # Main Python package
-│   ├── __init__.py          # Package initialization file
-│   ├── cli.py               # CLI interface (Click or argparse)
-│   ├── job.py               # Job class (job management)
-│   ├── scheduler.py         # JobScheduler class (scheduler abstraction)
-│   ├── config.py            # Configuration management
-│   ├── utils.py             # Utility functions
-│── tests/                   # Test code
-│   ├── __init__.py
-│   ├── test_job.py          # Unit tests for Job class
-│   ├── test_scheduler.py    # Tests for Scheduler
-│   ├── test_cli.py          # Tests for CLI
-│── scripts/                 # Auxiliary scripts (development, deployment)
-│   ├── setup_env.sh         # Environment setup script
-│   ├── run_linter.sh        # Linter execution script
-│── docs/                    # Documentation
-│   ├── index.md             # Detailed explanation other than README
-│   ├── usage.md             # Usage instructions
-│   ├── architecture.md      # Design philosophy and internal structure
-│── examples/                # Sample scripts for usage examples
-│   ├── example1.py
-│   ├── example2.yaml
-│── .gitignore               # Git ignore file
-│── .pre-commit-config.yaml  # Configuration for pre-commit
-│── pyproject.toml           # Poetry configuration file
-│── poetry.lock              # Poetry lock file
-│── README.md                # Project overview
-│── LICENSE                  # License file
-```
-
-## Setup & Development Instructions
-
-### 1. Clone the Repository
+### 1. Poetry のインストール
+Poetry がインストールされていない場合は、以下のコマンドを実行してください。
 
 ```sh
-git clone https://github.com/yourname/Xcrypt-Python.git
-cd Xcrypt-Python
+curl -sSL https://install.python-poetry.org | python3 -
 ```
 
-### 2. Set up Poetry
+または、pip を使用してインストールできます。
 
 ```sh
-# Install Poetry
 pip install poetry
+```
 
-# Create a virtual environment & install dependencies
+### 2. プロジェクトのセットアップ
+Poetry を使用してプロジェクトの環境をセットアップします。
+
+```sh
 poetry install
 ```
 
-### 3. Verify CLI Tool
+### 3. 仮想環境の有効化
 
 ```sh
-poetry run xcrypt-python --help
+poetry shell
 ```
 
-### 4. Run Tests
+## `perltidy` のインストール
+本プロジェクトでは、Xcrypt で生成された Perl コードを整形するために `perltidy` を使用します。
+`perltidy` をインストールするには、以下のコマンドを実行してください。
 
 ```sh
-poetry run pytest
+cpan install Perl::Tidy
 ```
 
-### 5. Linter & Formatter Check
+または、以下の方法でもインストールできます。
 
 ```sh
-poetry run black .
-poetry run mypy xcrypt_python/
-poetry run flake8 xcrypt_python/ tests/
-poetry run isort xcrypt_python/ tests/ --check-only
+sudo apt-get install perltidy  # Ubuntu/Debian
+brew install perltidy          # macOS
 ```
 
-## License
+## 使い方
+Xcrypt Transformer を使用して Python コードを Xcrypt に変換するには、
+関数に `@Xcrypt` デコレータを付けて実行してください。
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+### 1. 変換対象の関数を作成
+```python
+@Xcrypt
+def sample():
+    from qw import bulk, core
+    bulk.initialize(max_time=16384)
+    
+    template = {
+        'RANGE0': [30, 40],
+        'RANGE1': list(range(5)),
+        'id': 'jobbulktime',
+        'exe0': 'bin/fib',
+        'arg0_0@': lambda VALUE: VALUE[0] + VALUE[1],
+        'time@': lambda VALUE: 2 ** (VALUE[0] + VALUE[1] - 30),
+    }
+
+    jobs = core.prepare(template)
+    print("ID              \testimated time")
+    for j in jobs:
+        print(f"{j['id']}\t{j['time']}")
+
+    bulkedjobs = bulk.bulk('bulktim', jobs)
+    core.submit(bulkedjobs)
+    core.sync(bulkedjobs)
+```
+
+### 2. 実行
+
+```sh
+poetry run python script.py
+```
+
+変換された Xcrypt コードが出力されます。
+
+## ライセンス
+本プロジェクトは MIT ライセンスの下で提供されます。
+
