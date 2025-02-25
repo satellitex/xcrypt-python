@@ -4,12 +4,9 @@ from xcrypt_python.formatter import format_perl_code
 
 def test_bulk_num_conversion():
     xcr_code = bulk_num()
-    expected_code = """
-use base qw(bulk core);
-&bulk::initialize(
-    'max_num' => "3",
- );
-my $template = (
+    expected_code = """use base qw(bulk core);
+bulk::initialize('max_num',"3");
+my %template = (
     'RANGE0'  => [30,40],
     'RANGE1'  => [0..4],
     'id'      => 'jobbulknum',

@@ -1,4 +1,4 @@
-from xcrypt.lib import Xcrypt
+from xcrypt_python.lib import Xcrypt
 
 @Xcrypt
 def limit():

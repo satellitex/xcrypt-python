@@ -7,6 +7,23 @@ class XcryptTransformer(ast.NodeVisitor):
     def __init__(self):
         self.xcrypt_code = []
         self.imported_modules = []
+        self.variable_types = {}
+        self.standard_functions = ["print", "sprintf", "printf"]
+
+    def visit_AnnAssign(self, node):
+        var_name = node.target.id
+        var_type = self._expr_to_str(node.annotation, is_annotation=True)
+        
+        if  var_type in ["dict" ,"Dict"]:
+            self.variable_types[var_name] = "dict"
+        elif var_type == "list" or "List" in var_type:
+            self.variable_types[var_name] = "list"
+        else:
+            self.variable_types[var_name] = "scalar"
+        
+        value = self._expr_to_str(node.value)
+        self.xcrypt_code.append(f"my {self._expr_to_str(node.target)} = {value};")
+
 
     def visit_ImportFrom(self, node):
         modules = [alias.name for alias in node.names]
@@ -20,14 +37,25 @@ class XcryptTransformer(ast.NodeVisitor):
     def visit_Assign(self, node):
         targets = [self._expr_to_str(target) for target in node.targets]
         value = self._expr_to_str(node.value)
-        self.xcrypt_code.append(f"my ${targets[0]} = {value};")
-        self.generic_visit(node)
+        if isinstance(node.value, ast.Dict):
+            self.xcrypt_code.append(f"my %{targets[0]} = {value};")
+        else:
+            self.xcrypt_code.append(f"my ${targets[0]} = {value};")        
 
     def visit_Call(self, node):
-        func_name = self._expr_to_str(node.func)
-        args = ", ".join(self._expr_to_str(arg) for arg in node.args)
-        self.xcrypt_code.append(f"&{func_name}({args});")
-        self.generic_visit(node)
+        if isinstance(node.func, ast.Attribute):
+            obj = self._expr_to_str(node.func.value, is_function=True)
+            method = node.func.attr
+            args = ", ".join(self._expr_to_str(arg) for arg in node.args)
+            if obj in self.imported_modules:
+                append_str = f"{obj}::{method}({args});"
+            else:
+                append_str = f"{obj}->{method}({args});"
+        else:
+            func_name = self._expr_to_str(node.func,is_function=True)
+            args = ", ".join(self._expr_to_str(arg) for arg in node.args)
+            append_str = f"{func_name}({args});"
+        self.xcrypt_code.append(append_str)
 
     def visit_For(self, node):
         target = self._expr_to_str(node.target)
@@ -37,7 +65,8 @@ class XcryptTransformer(ast.NodeVisitor):
         self.xcrypt_code.append("}")
 
     def visit_FormattedValue(self, node):
-        return self._expr_to_str(node.value)
+        self.xcrypt_code.append(self._expr_to_str(node.value))
+        self.generic_visit(node)
 
     def visit_JoinedStr(self, node):
         perl_fmt_string = ""
@@ -48,11 +77,21 @@ class XcryptTransformer(ast.NodeVisitor):
                 perl_fmt_string += "%s"
             else:
                 perl_fmt_string += part.s.replace("%", "%%")
-        return f"sprintf('{perl_fmt_string}', {', '.join(values)})"
+        return f"sprintf(\"{perl_fmt_string}\", {', '.join(values)})"
 
-    def _expr_to_str(self, expr):
+    def _expr_to_str(self, expr, is_function=False, is_annotation=False):
         if isinstance(expr, ast.Name):
-            return expr.id
+            if is_function:
+                return f"{expr.id}"
+            if is_annotation:
+                return f"{expr.id}"
+            var_type = self.variable_types.get(expr.id, "scalar")
+            if var_type == "dict":
+                return f"%{expr.id}"
+            elif var_type == "list":
+                return f"@{expr.id}"
+            else:
+                return f"${expr.id}"
         elif isinstance(expr, ast.Constant):
             return repr(expr.value).replace("'", "")
         elif isinstance(expr, ast.BinOp):
@@ -75,11 +114,18 @@ class XcryptTransformer(ast.NodeVisitor):
         elif isinstance(expr, ast.Compare):
             return f" ({self._expr_to_str(expr.left)} {' '.join(self._op_to_str(op) + ' ' + self._expr_to_str(cmp) for op, cmp in zip(expr.ops, expr.comparators))}) "
         elif isinstance(expr, ast.Call):
-            return f"&{self._expr_to_str(expr.func)}({', '.join(self._expr_to_str(arg) for arg in expr.args)})"
+            return f"{self._expr_to_str(expr.func, is_function=True)}({', '.join(self._expr_to_str(arg) for arg in expr.args)})"
         elif isinstance(expr, ast.Attribute):
+            if isinstance(expr.value, ast.Name) and expr.value.id == "self":
+                return f"$self->{{{expr.attr}}}"  # Perl のハッシュアクセス形式
             return f"{self._expr_to_str(expr.value)}->{expr.attr}"
         elif isinstance(expr, ast.Subscript):
-            return f"{self._expr_to_str(expr.value)}[{self._expr_to_str(expr.slice)}]"
+            value = self._expr_to_str(expr.value)
+            index = self._expr_to_str(expr.slice)
+            var_type = self.variable_types.get(expr.value.id, "scalar")
+            if var_type == "dict" or var_type == "list":
+                return f"${value[1:]}[{index}]"
+            return f"{value}[{index}]"
         elif isinstance(expr, ast.Slice):
             return f"{self._expr_to_str(expr.lower)}:{self._expr_to_str(expr.upper)}:{self._expr_to_str(expr.step)}"
         elif isinstance(expr, ast.Tuple):
@@ -88,10 +134,8 @@ class XcryptTransformer(ast.NodeVisitor):
             return self.visit_JoinedStr(expr)
         elif isinstance(expr, ast.FormattedValue):
             return f"{self._expr_to_str(expr.value)}"        
-        elif isinstance(expr, ast.Subscript):
-            return f"{self._expr_to_str(expr.value)}{{{self._expr_to_str(expr.slice)}}}"
         
-        return "UNKNOWN_EXPR"
+        return expr.value
 
     def _op_to_str(self, op):
         if isinstance(op, ast.Add):
