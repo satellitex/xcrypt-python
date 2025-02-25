@@ -11,7 +11,7 @@ def format_perl_code(code: str) -> str:
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pl") as temp_file:
         temp_file.write(code.encode("utf-8"))
         temp_file_name = temp_file.name
-    
+
     try:
         # Run perltidy to format the code
         result = subprocess.run(["perltidy", "-b", temp_file_name], capture_output=True, text=True)

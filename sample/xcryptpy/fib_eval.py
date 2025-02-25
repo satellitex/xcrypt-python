@@ -3,7 +3,7 @@ from xcrypt_python.lib import Xcrypt
 
 # Uncomment if your system does not support a batch scheduler.
 @Xcrypt
-def fiv_eval():
+def fib_eval():
     from qw import limit, core
     limit.initialize(5)
 

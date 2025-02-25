@@ -3,7 +3,7 @@
 from xcrypt_python.lib import Xcrypt
 
 @Xcrypt
-def signal():
+def signal_handle():
     from qw import core
 
     # If defined, called when ^C is pressed.

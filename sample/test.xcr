@@ -1,0 +1,26 @@
+use base qw(core);
+my %template1 = (
+    'id@'    => sub { sprintf( "jobabrt_%s", $VALUE[0] ) },
+    'exe0@'  => sub { sprintf( "bin/fib %s > out_%s", $VALUE[0], $VALUE[0] ) },
+    'RANGE0' => [ 60, 61, 62, 40, 41, 42 ],
+    'initially'     => sub { print( sprintf( ">initially> %s.", self->id ) ) },
+    'before'        => sub { print( sprintf( ">>before>> %s.",  self->id ) ) },
+    'after'         => sub { print( sprintf( "<<after<< %s.",   self->id ) ) },
+    'after_aborted' =>
+      sub { print( sprintf( "!after_aborted! %s.", self->id ) ) },
+    'finally' => sub { print( sprintf( "<finally< %s.", self->id ) ) }
+);
+&print( sprintf( ">initially> %s.",     self->id ) );
+&print( sprintf( ">>before>> %s.",      self->id ) );
+&print( sprintf( "<<after<< %s.",       self->id ) );
+&print( sprintf( "!after_aborted! %s.", self->id ) );
+&print( sprintf( "<finally< %s.",       self->id ) );
+my $jobs = core->prepare_submit(template1);
+&core->prepare_submit(template1);
+&$jobs[0]->abort();
+&$jobs[1]->cancel();
+&$jobs[2]->invalidate();
+&core->sync(jobs);
+&$jobs[3]->abort();
+&$jobs[4]->cancel();
+&$jobs[5]->invalidate();

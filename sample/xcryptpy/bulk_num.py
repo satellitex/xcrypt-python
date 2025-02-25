@@ -7,9 +7,7 @@ def bulk_num():
 
     from qw import bulk, core
 
-    initialize = {
-        'max_num': "3"    # unify up to 3 jobs.
-     }
+    bulk.initialize('max_num', "3")
 
     template = {
         'RANGE0': [30,40],
@@ -19,7 +17,7 @@ def bulk_num():
         'arg0_0': lambda value: value[0] + value[1],
      }
 
-    jobs = core.prepare(template)
+    jobs = prepare(template)
     bulked_jobs = bulk.bulk('bulknum', jobs)
-    core.submit(bulked_jobs)
-    core.sync(bulked_jobs)
+    submit(bulked_jobs)
+    sync(bulked_jobs)

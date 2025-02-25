@@ -2,7 +2,7 @@
 from xcrypt_python.lib import Xcrypt
 
 @Xcrypt
-def signle():
+def single():
     from qw import core
 
     template = {
