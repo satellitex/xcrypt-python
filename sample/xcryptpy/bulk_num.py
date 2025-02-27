@@ -7,9 +7,9 @@ def bulk_num():
 
     from qw import bulk, core
 
-    bulk.initialize('max_num', "3")
+    bulk.initialize({'max_num': '3'})
 
-    template = {
+    template: dict = {
         'RANGE0': [30,40],
         'RANGE1': list(range(0, 5)),
         'id': 'jobbulknum',
@@ -17,7 +17,7 @@ def bulk_num():
         'arg0_0': lambda value: value[0] + value[1],
      }
 
-    jobs = prepare(template)
-    bulked_jobs = bulk.bulk('bulknum', jobs)
+    jobs: list = prepare(template)
+    bulked_jobs: list = bulk.bulk('bulknum', jobs)
     submit(bulked_jobs)
     sync(bulked_jobs)

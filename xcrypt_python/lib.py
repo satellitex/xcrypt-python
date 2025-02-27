@@ -42,16 +42,43 @@ class XcryptTransformer(ast.NodeVisitor):
         else:
             self.xcrypt_code.append(f"my ${targets[0]} = {value};")        
 
-    def visit_Call(self, node):
+
+    def _visit_call_attribute(self, node):
         if isinstance(node.func, ast.Attribute):
             obj = self._expr_to_str(node.func.value, is_function=True)
             method = node.func.attr
+            print("Method", method, ", ".join(self._expr_to_str(arg) for arg in node.args))
             args = ", ".join(self._expr_to_str(arg) for arg in node.args)
             if obj in self.imported_modules:
-                append_str = f"{obj}::{method}({args});"
+                return f"{obj}::{method}({args});"
             else:
-                append_str = f"{obj}->{method}({args});"
+                return f"{obj}->{method}({args});"
+        return False
+    
+    def _visit_call_list_range(self, node):
+        func_name = self._expr_to_str(node.func,is_function=True)
+        # list(range(...)) のパターンを検出
+        if func_name == "list" and len(node.args) == 1 and isinstance(node.args[0], ast.Call):
+            inner_func = self._expr_to_str(node.args[0].func, is_function=True)
+            
+            if inner_func == "range":
+                range_args = [self._expr_to_str(arg) for arg in node.args[0].args]
+                
+                if len(range_args) == 1:  # range(n) → [0..n-1]
+                    return f"[ 0..{range_args[0]}-1 ]"
+                elif len(range_args) == 2:  # range(x, y) → [x..y-1]
+                    return f"[ {range_args[0]}..{range_args[1]}-1 ]"
+                elif len(range_args) == 3:  # range(x, y, step) → [x, x+step, ...]
+                    return f"[ {range_args[0]}..{range_args[1]}-1 step {range_args[2]} ]"  # Perl では step は明示的に書く必要あり
         else:
+            return False
+
+
+    def visit_Call(self, node):
+        append_str = self._visit_call_attribute(node)
+        if not append_str:
+            append_str = self._visit_call_list_range(node)
+        if not append_str:
             func_name = self._expr_to_str(node.func,is_function=True)
             args = ", ".join(self._expr_to_str(arg) for arg in node.args)
             append_str = f"{func_name}({args});"
@@ -93,7 +120,12 @@ class XcryptTransformer(ast.NodeVisitor):
             else:
                 return f"${expr.id}"
         elif isinstance(expr, ast.Constant):
-            return repr(expr.value).replace("'", "")
+            if isinstance(expr.value, str):
+                if (expr.value[0] == '"' and expr.value[-1] == '"') or (expr.value[0] == "'" and expr.value[-1] == "'"):
+                    return f'{expr.value}'
+                return f"'{expr.value}'"
+            return f'{expr.value}'
+            # return repr(expr.value).replace("'", "")
         elif isinstance(expr, ast.BinOp):
             return f"({self._expr_to_str(expr.left)} {self._op_to_str(expr.op)} {self._expr_to_str(expr.right)})"
         elif isinstance(expr, ast.UnaryOp):
@@ -105,7 +137,7 @@ class XcryptTransformer(ast.NodeVisitor):
         elif isinstance(expr, ast.IfExp):
             return f"({self._expr_to_str(expr.body)} if {self._expr_to_str(expr.test)} else {self._expr_to_str(expr.orelse)})"
         elif isinstance(expr, ast.Dict):
-            items = ", ".join(f"'{self._expr_to_str(k)}' => {self._expr_to_str(v)}" for k, v in zip(expr.keys, expr.values))
+            items = ", ".join(f"{self._expr_to_str(k)} => {self._expr_to_str(v)}" for k, v in zip(expr.keys, expr.values))
             return f"({items})"
         elif isinstance(expr, ast.List):
             return "[" + ", ".join(self._expr_to_str(e) for e in expr.elts) + "]"
@@ -114,7 +146,12 @@ class XcryptTransformer(ast.NodeVisitor):
         elif isinstance(expr, ast.Compare):
             return f" ({self._expr_to_str(expr.left)} {' '.join(self._op_to_str(op) + ' ' + self._expr_to_str(cmp) for op, cmp in zip(expr.ops, expr.comparators))}) "
         elif isinstance(expr, ast.Call):
-            return f"{self._expr_to_str(expr.func, is_function=True)}({', '.join(self._expr_to_str(arg) for arg in expr.args)})"
+            res = self._visit_call_attribute(expr)
+            if not res:
+                res = self._visit_call_list_range(expr)
+            if not res:
+                res = f"{self._expr_to_str(expr.func, is_function=True)}({', '.join(self._expr_to_str(arg) for arg in expr.args)})"
+            return res
         elif isinstance(expr, ast.Attribute):
             if isinstance(expr.value, ast.Name) and expr.value.id == "self":
                 return f"$self->{{{expr.attr}}}"  # Perl のハッシュアクセス形式
@@ -134,6 +171,8 @@ class XcryptTransformer(ast.NodeVisitor):
             return self.visit_JoinedStr(expr)
         elif isinstance(expr, ast.FormattedValue):
             return f"{self._expr_to_str(expr.value)}"        
+        elif isinstance(expr, ast.Str):
+            return repr(expr.s).replace("'", "")
         
         return expr.value
 
