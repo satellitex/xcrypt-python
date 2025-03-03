@@ -12,12 +12,12 @@ my %template = (
     'RANGE1'  => [ 0..4 ],
     'id'      => 'jobbulknum',
     'exe0'    => 'bin/fib',
-    'arg0_0@' => sub {$VALUE[0] + $VALUE[1];},
+    'arg0_0@' => sub {$VALUE[0] + $VALUE[1]}
 );
-my @jobs = &prepare(%template);
-my @bulkedjobs = &bulk::bulk('bulknum', @jobs);
-&submit(@bulkedjobs);
-&sync(@bulkedjobs);
+my @jobs = prepare(%template);
+my @bulked_jobs = bulk::bulk('bulknum', @jobs);
+submit(@bulked_jobs);
+sync(@bulked_jobs);
 """
     formatted_xcr_code = format_perl_code(xcr_code).split('\n')
     formatted_expected_code = format_perl_code(expected_code).split('\n')

@@ -7,14 +7,14 @@ def bulk_num():
 
     from qw import bulk, core
 
-    bulk.initialize({'max_num': '3'})
+    bulk.initialize('max_num', '3')
 
     template: dict = {
         'RANGE0': [30,40],
         'RANGE1': list(range(0, 5)),
         'id': 'jobbulknum',
         'exe0': 'bin/fib',
-        'arg0_0': lambda value: value[0] + value[1],
+        'arg0_0@': lambda VALUE: VALUE[0] + VALUE[1],
      }
 
     jobs: list = prepare(template)

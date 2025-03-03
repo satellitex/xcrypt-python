@@ -65,19 +65,34 @@ class XcryptTransformer(ast.NodeVisitor):
                 range_args = [self._expr_to_str(arg) for arg in node.args[0].args]
                 
                 if len(range_args) == 1:  # range(n) → [0..n-1]
-                    return f"[ 0..{range_args[0]}-1 ]"
+                    return f"[ 0..{int(range_args[0])-1} ]"
                 elif len(range_args) == 2:  # range(x, y) → [x..y-1]
-                    return f"[ {range_args[0]}..{range_args[1]}-1 ]"
+                    return f"[ {range_args[0]}..{int(range_args[1])-1} ]"
                 elif len(range_args) == 3:  # range(x, y, step) → [x, x+step, ...]
-                    return f"[ {range_args[0]}..{range_args[1]}-1 step {range_args[2]} ]"  # Perl では step は明示的に書く必要あり
+                    return f"[ {range_args[0]}..{int(range_args[1])-1} step {range_args[2]} ]"  # Perl では step は明示的に書く必要あり
         else:
             return False
+
+    def _visit_call_args_dict(self, node):
+        # 関数の最初の引数が辞書の場合（= Python の `dict` → Perl の ハッシュリスト）
+        if len(node.args) == 1 and isinstance(node.args[0], ast.Dict):
+            func_name = self._expr_to_str(node.func, is_function=True)
+            args = []
+            for key_node, value_node in zip(node.args[0].keys, node.args[0].values):
+                key = self._expr_to_str(key_node)
+                value = self._expr_to_str(value_node)
+                args.append(f"{key} => {value}")
+
+            return f"{func_name}(\n    " + ",\n    ".join(args) + "\n);"
+        return False
 
 
     def visit_Call(self, node):
         append_str = self._visit_call_attribute(node)
         if not append_str:
             append_str = self._visit_call_list_range(node)
+        if not append_str:
+            append_str = self._visit_call_args_dict(node)
         if not append_str:
             func_name = self._expr_to_str(node.func,is_function=True)
             args = ", ".join(self._expr_to_str(arg) for arg in node.args)
@@ -87,7 +102,7 @@ class XcryptTransformer(ast.NodeVisitor):
     def visit_For(self, node):
         target = self._expr_to_str(node.target)
         iter = self._expr_to_str(node.iter)
-        self.xcrypt_code.append(f"foreach my ${target} (@{iter}) {{")
+        self.xcrypt_code.append(f"foreach my {target} ({iter}) {{")
         self.generic_visit(node)
         self.xcrypt_code.append("}")
 
@@ -127,11 +142,11 @@ class XcryptTransformer(ast.NodeVisitor):
             return f'{expr.value}'
             # return repr(expr.value).replace("'", "")
         elif isinstance(expr, ast.BinOp):
-            return f"({self._expr_to_str(expr.left)} {self._op_to_str(expr.op)} {self._expr_to_str(expr.right)})"
+            return f"{self._expr_to_str(expr.left)} {self._op_to_str(expr.op)} {self._expr_to_str(expr.right)}"
         elif isinstance(expr, ast.UnaryOp):
-            return f"({self._op_to_str(expr.op)}{self._expr_to_str(expr.operand)})"
+            return f"{self._op_to_str(expr.op)}{self._expr_to_str(expr.operand)}"
         elif isinstance(expr, ast.BoolOp):
-            return f" ({' '.join(self._expr_to_str(v) for v in expr.values)}) "
+            return f"{' '.join(self._expr_to_str(v) for v in expr.values)}"
         elif isinstance(expr, ast.Lambda):
             return f"sub {{ {self._expr_to_str(expr.body)} }}"
         elif isinstance(expr, ast.IfExp):
@@ -149,6 +164,8 @@ class XcryptTransformer(ast.NodeVisitor):
             res = self._visit_call_attribute(expr)
             if not res:
                 res = self._visit_call_list_range(expr)
+            if not res:
+                res = self._visit_call_args_dict(expr)
             if not res:
                 res = f"{self._expr_to_str(expr.func, is_function=True)}({', '.join(self._expr_to_str(arg) for arg in expr.args)})"
             return res
@@ -173,8 +190,11 @@ class XcryptTransformer(ast.NodeVisitor):
             return f"{self._expr_to_str(expr.value)}"        
         elif isinstance(expr, ast.Str):
             return repr(expr.s).replace("'", "")
+        elif isinstance(expr, ast.Starred):  # `*args` の処理
+            value = self._expr_to_str(expr.value)
+            return f"@{value}"  # Perl のリスト展開
         
-        return expr.value
+        return f"UNDERSTAND_ERROR: {expr}"
 
     def _op_to_str(self, op):
         if isinstance(op, ast.Add):
