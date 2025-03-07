@@ -98,3 +98,91 @@ class StatementVisitor(ExpressionVisitor):
 
     def visit_JoinedStr(self, node: ast.JoinedStr) -> Any:
         self.xcrypt_code.append(self._visit_JoinedStr(node))
+        
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        """
+        関数定義を処理し、Perlの`sub`関数宣言に変換します。
+        Python: def function_name(arg1, arg2=default):
+        Perl: sub function_name {
+            my ($arg1, $arg2) = @_;
+            # デフォルト値の処理
+            $arg2 = default unless defined $arg2;
+            # 関数本体
+        }
+        """
+        # 関数名を取得
+        func_name = node.name
+        self.current_function = func_name
+        self.function_defs[func_name] = node
+        
+        # 関数宣言をPerlスタイルに変換
+        self.xcrypt_code.append(f"sub {func_name} {{")
+        
+        # 引数リストを生成
+        has_args = len(node.args.args) > 0
+        if has_args:
+            # 引数名のリスト
+            arg_names = []
+            for arg in node.args.args:
+                if arg.arg == 'self':  # 'self'引数はスキップ
+                    continue
+                arg_names.append(f"${arg.arg}")
+                
+            if arg_names:
+                # @_からの引数の割り当て
+                self.xcrypt_code.append(f"    my ({', '.join(arg_names)}) = @_;")
+                
+                # デフォルト値の処理
+                if node.args.defaults:
+                    num_defaults = len(node.args.defaults)
+                    num_args = len(node.args.args)
+                    offset = num_args - num_defaults
+                    
+                    for i, default in enumerate(node.args.defaults):
+                        arg_idx = i + offset
+                        if arg_idx < len(node.args.args):
+                            arg_name = node.args.args[arg_idx].arg
+                            if arg_name != 'self':  # 'self'引数はスキップ
+                                default_value = self._expr_to_str(default)
+                                self.xcrypt_code.append(f"    ${arg_name} = {default_value} unless defined ${arg_name};")
+        
+        # 関数本体を処理
+        for stmt in node.body:
+            self.visit(stmt)
+            
+        # 関数終了
+        self.xcrypt_code.append("}")
+        self.current_function = None
+        
+    def visit_Return(self, node: ast.Return) -> None:
+        """
+        return文を処理し、Perlのreturn文に変換します。
+        Python: return value
+        Perl: return value;
+        """
+        if node.value:
+            value = self._expr_to_str(node.value)
+            self.xcrypt_code.append(f"    return {value};")
+        else:
+            self.xcrypt_code.append("    return;")
+            
+    def visit_If(self, node: ast.If) -> None:
+        """
+        if文を処理し、Perlのif文に変換します。
+        Python: if condition: ... else: ...
+        Perl: if (condition) { ... } else { ... }
+        """
+        condition = self._expr_to_str(node.test)
+        self.xcrypt_code.append(f"if ({condition}) {{")
+        
+        # ifブロックの本体
+        for stmt in node.body:
+            self.visit(stmt)
+        
+        # elseブロックがある場合
+        if node.orelse:
+            self.xcrypt_code.append("} else {")
+            for stmt in node.orelse:
+                self.visit(stmt)
+        
+        self.xcrypt_code.append("}")
