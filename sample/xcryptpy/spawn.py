@@ -1,12 +1,13 @@
 # A sample of spawn{}: Multithreading language like notation for submitting jobs
 from xcrypt_python.lib import Xcrypt
 
-TEMPLATE = {}
 
 @Xcrypt
-def spwan():
+def spawn():
     from qw import sandbox, core
     import return_transmission
+
+    TEMPLATE = {}
 
     # Global variable named $i can be read (cannot be written) to from spawn bodies.
     TEMPLATE['transfer_variable'] = ['$i']

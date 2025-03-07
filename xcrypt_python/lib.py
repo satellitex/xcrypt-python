@@ -7,6 +7,23 @@ class XcryptTransformer(ast.NodeVisitor):
     def __init__(self):
         self.xcrypt_code = []
         self.imported_modules = []
+        self.variable_types = {}
+        self.standard_functions = ["print", "sprintf", "printf"]
+
+    def visit_AnnAssign(self, node):
+        var_name = node.target.id
+        var_type = self._expr_to_str(node.annotation, is_annotation=True)
+        
+        if  var_type in ["dict" ,"Dict"]:
+            self.variable_types[var_name] = "dict"
+        elif var_type == "list" or "List" in var_type:
+            self.variable_types[var_name] = "list"
+        else:
+            self.variable_types[var_name] = "scalar"
+        
+        value = self._expr_to_str(node.value)
+        self.xcrypt_code.append(f"my {self._expr_to_str(node.target)} = {value};")
+
 
     def visit_ImportFrom(self, node):
         modules = [alias.name for alias in node.names]
@@ -20,24 +37,78 @@ class XcryptTransformer(ast.NodeVisitor):
     def visit_Assign(self, node):
         targets = [self._expr_to_str(target) for target in node.targets]
         value = self._expr_to_str(node.value)
-        self.xcrypt_code.append(f"my ${targets[0]} = {value};")
-        self.generic_visit(node)
+        if isinstance(node.value, ast.Dict):
+            self.xcrypt_code.append(f"my %{targets[0]} = {value};")
+        else:
+            self.xcrypt_code.append(f"my ${targets[0]} = {value};")        
+
+
+    def _visit_call_attribute(self, node):
+        if isinstance(node.func, ast.Attribute):
+            obj = self._expr_to_str(node.func.value, is_function=True)
+            method = node.func.attr
+            print("Method", method, ", ".join(self._expr_to_str(arg) for arg in node.args))
+            args = ", ".join(self._expr_to_str(arg) for arg in node.args)
+            if obj in self.imported_modules:
+                return f"{obj}::{method}({args});"
+            else:
+                return f"{obj}->{method}({args});"
+        return False
+    
+    def _visit_call_list_range(self, node):
+        func_name = self._expr_to_str(node.func,is_function=True)
+        # list(range(...)) のパターンを検出
+        if func_name == "list" and len(node.args) == 1 and isinstance(node.args[0], ast.Call):
+            inner_func = self._expr_to_str(node.args[0].func, is_function=True)
+            
+            if inner_func == "range":
+                range_args = [self._expr_to_str(arg) for arg in node.args[0].args]
+                
+                if len(range_args) == 1:  # range(n) → [0..n-1]
+                    return f"[ 0..{int(range_args[0])-1} ]"
+                elif len(range_args) == 2:  # range(x, y) → [x..y-1]
+                    return f"[ {range_args[0]}..{int(range_args[1])-1} ]"
+                elif len(range_args) == 3:  # range(x, y, step) → [x, x+step, ...]
+                    return f"[ {range_args[0]}..{int(range_args[1])-1} step {range_args[2]} ]"  # Perl では step は明示的に書く必要あり
+        else:
+            return False
+
+    def _visit_call_args_dict(self, node):
+        # 関数の最初の引数が辞書の場合（= Python の `dict` → Perl の ハッシュリスト）
+        if len(node.args) == 1 and isinstance(node.args[0], ast.Dict):
+            func_name = self._expr_to_str(node.func, is_function=True)
+            args = []
+            for key_node, value_node in zip(node.args[0].keys, node.args[0].values):
+                key = self._expr_to_str(key_node)
+                value = self._expr_to_str(value_node)
+                args.append(f"{key} => {value}")
+
+            return f"{func_name}(\n    " + ",\n    ".join(args) + "\n);"
+        return False
+
 
     def visit_Call(self, node):
-        func_name = self._expr_to_str(node.func)
-        args = ", ".join(self._expr_to_str(arg) for arg in node.args)
-        self.xcrypt_code.append(f"&{func_name}({args});")
-        self.generic_visit(node)
+        append_str = self._visit_call_attribute(node)
+        if not append_str:
+            append_str = self._visit_call_list_range(node)
+        if not append_str:
+            append_str = self._visit_call_args_dict(node)
+        if not append_str:
+            func_name = self._expr_to_str(node.func,is_function=True)
+            args = ", ".join(self._expr_to_str(arg) for arg in node.args)
+            append_str = f"{func_name}({args});"
+        self.xcrypt_code.append(append_str)
 
     def visit_For(self, node):
         target = self._expr_to_str(node.target)
         iter = self._expr_to_str(node.iter)
-        self.xcrypt_code.append(f"foreach my ${target} (@{iter}) {{")
+        self.xcrypt_code.append(f"foreach my {target} ({iter}) {{")
         self.generic_visit(node)
         self.xcrypt_code.append("}")
 
     def visit_FormattedValue(self, node):
-        return self._expr_to_str(node.value)
+        self.xcrypt_code.append(self._expr_to_str(node.value))
+        self.generic_visit(node)
 
     def visit_JoinedStr(self, node):
         perl_fmt_string = ""
@@ -48,25 +119,40 @@ class XcryptTransformer(ast.NodeVisitor):
                 perl_fmt_string += "%s"
             else:
                 perl_fmt_string += part.s.replace("%", "%%")
-        return f"sprintf('{perl_fmt_string}', {', '.join(values)})"
+        return f"sprintf(\"{perl_fmt_string}\", {', '.join(values)})"
 
-    def _expr_to_str(self, expr):
+    def _expr_to_str(self, expr, is_function=False, is_annotation=False):
         if isinstance(expr, ast.Name):
-            return expr.id
+            if is_function:
+                return f"{expr.id}"
+            if is_annotation:
+                return f"{expr.id}"
+            var_type = self.variable_types.get(expr.id, "scalar")
+            if var_type == "dict":
+                return f"%{expr.id}"
+            elif var_type == "list":
+                return f"@{expr.id}"
+            else:
+                return f"${expr.id}"
         elif isinstance(expr, ast.Constant):
-            return repr(expr.value).replace("'", "")
+            if isinstance(expr.value, str):
+                if (expr.value[0] == '"' and expr.value[-1] == '"') or (expr.value[0] == "'" and expr.value[-1] == "'"):
+                    return f'{expr.value}'
+                return f"'{expr.value}'"
+            return f'{expr.value}'
+            # return repr(expr.value).replace("'", "")
         elif isinstance(expr, ast.BinOp):
-            return f"({self._expr_to_str(expr.left)} {self._op_to_str(expr.op)} {self._expr_to_str(expr.right)})"
+            return f"{self._expr_to_str(expr.left)} {self._op_to_str(expr.op)} {self._expr_to_str(expr.right)}"
         elif isinstance(expr, ast.UnaryOp):
-            return f"({self._op_to_str(expr.op)}{self._expr_to_str(expr.operand)})"
+            return f"{self._op_to_str(expr.op)}{self._expr_to_str(expr.operand)}"
         elif isinstance(expr, ast.BoolOp):
-            return f" ({' '.join(self._expr_to_str(v) for v in expr.values)}) "
+            return f"{' '.join(self._expr_to_str(v) for v in expr.values)}"
         elif isinstance(expr, ast.Lambda):
             return f"sub {{ {self._expr_to_str(expr.body)} }}"
         elif isinstance(expr, ast.IfExp):
             return f"({self._expr_to_str(expr.body)} if {self._expr_to_str(expr.test)} else {self._expr_to_str(expr.orelse)})"
         elif isinstance(expr, ast.Dict):
-            items = ", ".join(f"'{self._expr_to_str(k)}' => {self._expr_to_str(v)}" for k, v in zip(expr.keys, expr.values))
+            items = ", ".join(f"{self._expr_to_str(k)} => {self._expr_to_str(v)}" for k, v in zip(expr.keys, expr.values))
             return f"({items})"
         elif isinstance(expr, ast.List):
             return "[" + ", ".join(self._expr_to_str(e) for e in expr.elts) + "]"
@@ -75,11 +161,25 @@ class XcryptTransformer(ast.NodeVisitor):
         elif isinstance(expr, ast.Compare):
             return f" ({self._expr_to_str(expr.left)} {' '.join(self._op_to_str(op) + ' ' + self._expr_to_str(cmp) for op, cmp in zip(expr.ops, expr.comparators))}) "
         elif isinstance(expr, ast.Call):
-            return f"&{self._expr_to_str(expr.func)}({', '.join(self._expr_to_str(arg) for arg in expr.args)})"
+            res = self._visit_call_attribute(expr)
+            if not res:
+                res = self._visit_call_list_range(expr)
+            if not res:
+                res = self._visit_call_args_dict(expr)
+            if not res:
+                res = f"{self._expr_to_str(expr.func, is_function=True)}({', '.join(self._expr_to_str(arg) for arg in expr.args)})"
+            return res
         elif isinstance(expr, ast.Attribute):
+            if isinstance(expr.value, ast.Name) and expr.value.id == "self":
+                return f"$self->{{{expr.attr}}}"  # Perl のハッシュアクセス形式
             return f"{self._expr_to_str(expr.value)}->{expr.attr}"
         elif isinstance(expr, ast.Subscript):
-            return f"{self._expr_to_str(expr.value)}[{self._expr_to_str(expr.slice)}]"
+            value = self._expr_to_str(expr.value)
+            index = self._expr_to_str(expr.slice)
+            var_type = self.variable_types.get(expr.value.id, "scalar")
+            if var_type == "dict" or var_type == "list":
+                return f"${value[1:]}[{index}]"
+            return f"{value}[{index}]"
         elif isinstance(expr, ast.Slice):
             return f"{self._expr_to_str(expr.lower)}:{self._expr_to_str(expr.upper)}:{self._expr_to_str(expr.step)}"
         elif isinstance(expr, ast.Tuple):
@@ -88,10 +188,13 @@ class XcryptTransformer(ast.NodeVisitor):
             return self.visit_JoinedStr(expr)
         elif isinstance(expr, ast.FormattedValue):
             return f"{self._expr_to_str(expr.value)}"        
-        elif isinstance(expr, ast.Subscript):
-            return f"{self._expr_to_str(expr.value)}{{{self._expr_to_str(expr.slice)}}}"
+        elif isinstance(expr, ast.Str):
+            return repr(expr.s).replace("'", "")
+        elif isinstance(expr, ast.Starred):  # `*args` の処理
+            value = self._expr_to_str(expr.value)
+            return f"@{value}"  # Perl のリスト展開
         
-        return "UNKNOWN_EXPR"
+        return f"UNDERSTAND_ERROR: {expr}"
 
     def _op_to_str(self, op):
         if isinstance(op, ast.Add):

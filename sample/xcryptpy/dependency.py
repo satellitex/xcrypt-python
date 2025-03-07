@@ -1,8 +1,5 @@
 from xcrypt_python.lib import Xcrypt
 
-# Initialize limit
-Xcrypt.initialize_limit(1)
-
 # Define a function using the decorator
 @Xcrypt
 def dependency():
