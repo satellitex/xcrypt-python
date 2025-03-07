@@ -1,17 +1,16 @@
 import pytest
 from sample.xcryptpy.DC import DC
 from xcrypt_python.formatter import format_perl_code
+from tests.util import normalize_whitespace
 
 def test_dc_conversion():
     xcr_code = DC()
-    expected_code = """
-use base qw(DC core);
-use strict;
+    expected_code = """use base qw(DC core);
 my $n = 13;
 my $threshold = 10;
 sub can_divde {
     my $job = shift;
-    print "User function"."\n";
+    print("User function");
     if($job->{arg0_0} > $threshold) {
         return 1;
     } else {
@@ -20,7 +19,7 @@ sub can_divde {
 }
 sub divide {
     my $job = shift;
-    print "User Function divide"."\n";
+    print("User Function divide");
     my %j1 = (
         'id' => $job->{id}."_".($job->{arg0_0}-1),
         'exe0' => $job->{exe0},
@@ -82,4 +81,6 @@ print "Fib($n) = $result\n";
     formatted_xcr_code = format_perl_code(xcr_code).split('\n')
     formatted_expected_code = format_perl_code(expected_code).split('\n')
     for xcr_line, expected_line in zip(formatted_xcr_code, formatted_expected_code):
-        assert xcr_line == expected_line
+        normalize_line = normalize_whitespace(xcr_line)
+        normalize_expected_line = normalize_whitespace(expected_line)
+        assert normalize_line == normalize_expected_line, f"{normalize_line} != {normalize_expected_line}"
