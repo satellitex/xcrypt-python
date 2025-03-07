@@ -55,13 +55,8 @@ class StatementVisitor(ExpressionVisitor):
         割り当てられた値に基づいて変数の型を決定します。
         """
         targets = [self._expr_to_str(target) for target in node.targets]
-        value = self._expr_to_str(node.value)
-        
-        # 辞書には%プレフィックス、その他の型には$を使用
-        if isinstance(node.value, ast.Dict):
-            self.xcrypt_code.append(f"my %{targets[0]} = {value};")
-        else:
-            self.xcrypt_code.append(f"my ${targets[0]} = {value};")
+        value = self._expr_to_str(node.value)        
+        self.xcrypt_code.append(f"my {targets[0]} = {value};")
 
 
 

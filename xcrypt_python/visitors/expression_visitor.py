@@ -172,7 +172,7 @@ class ExpressionVisitor(BaseVisitor):
                 
         return f"sprintf(\"{perl_fmt_string}\", {', '.join(values)})"
 
-    def _expr_to_str(self, expr: ast.AST, is_function: bool = False, is_annotation: bool = False) -> str:
+    def _expr_to_str(self, expr: ast.AST, is_function: bool = False, is_annotation: bool = False, is_in_str: bool = False) -> str:
         """
         Python ASTの式をPerlの文字列表現に変換します。
         
@@ -203,7 +203,11 @@ class ExpressionVisitor(BaseVisitor):
             if isinstance(expr.value, str):
                 if (expr.value[0] == '"' and expr.value[-1] == '"') or (expr.value[0] == "'" and expr.value[-1] == "'"):
                     return f'{expr.value}'
-                return f"'{expr.value}'"
+                print("Constant:", expr.value)
+                if "'" in expr.value:
+                    return f'"{expr.value}"'
+                else:
+                    return f"'{expr.value}'"
             return f'{expr.value}'
             
         elif isinstance(expr, ast.BinOp):
@@ -227,6 +231,7 @@ class ExpressionVisitor(BaseVisitor):
             return f"({self._expr_to_str(expr.body)} if {self._expr_to_str(expr.test)} else {self._expr_to_str(expr.orelse)})"
             
         elif isinstance(expr, ast.Dict):
+            print("expr.dict", expr.keys, expr.values)
             # 辞書式の処理
             items = ", ".join(f"{self._expr_to_str(k)} => {self._expr_to_str(v)}" for k, v in zip(expr.keys, expr.values))
             return f"({items})"
