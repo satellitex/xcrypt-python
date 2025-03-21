@@ -16,7 +16,16 @@ class BaseVisitor(ast.NodeVisitor):
         self.xcrypt_code: List[str] = []  # 生成されたXcryptコード
         self.imported_modules: List[str] = []  # インポートされたモジュール
         self.variable_types: Dict[str, str] = {}  # 変数の型情報
-        self.standard_functions: List[str] = ["print", "sprintf", "printf"]  # 標準関数
+        self.standard_functions: List[str] = [
+            "print", "sprintf", "printf",
+            "format", "foreach", "push", "pop", "shift", "unshift"
+        ]  # 標準関数
+        self.xcrypt_functions: List[str] = [
+            # sample/bulk_tim_out.xcrで呼ばれている関数
+            "initialize", "list", "range", "prepare", "bulk", "submit", "sync",
+            # sample/test.xcrで呼ばれている関数
+            "prepare_submit", "abort", "cancel", "invalidate"
+        ]  # Xcrypt固有の関数
         self.function_defs: Dict[str, ast.FunctionDef] = {}  # 関数定義を保存
         self.current_function: Optional[str] = None  # 現在処理中の関数名
 

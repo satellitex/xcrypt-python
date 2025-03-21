@@ -12,7 +12,7 @@ def DC():
 
     # Returns 1 (true) if the $job can be divided into equivalent multiple jobs.
     # Returns 0 (false) otherwise.
-    def can_divde(job):
+    def can_divde(job: dict):
         print("User function")
         if job['arg0_0'] > threshold:
             return 1
@@ -20,7 +20,7 @@ def DC():
             return 0
 
     # Divides $job into equivalent multiple jobs and returns an array of them.
-    def divide(job):
+    def divide(job: dict):
         print("User Function divide")
 
         j1 = {
