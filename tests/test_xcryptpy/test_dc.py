@@ -9,8 +9,8 @@ def test_dc_conversion():
 my $n = 13;
 my $threshold = 10;
 sub can_divde {
-    my $job = shift;
-    print("User function");
+    my ($job) = @_;
+    print('User function');
     if($job->{arg0_0} > $threshold) {
         return 1;
     } else {
@@ -19,7 +19,7 @@ sub can_divde {
 }
 sub divide {
     my $job = shift;
-    print("User Function divide");
+    print('User Function divide');
     my %j1 = (
         'id' => $job->{id}."_".($job->{arg0_0}-1),
         'exe0' => $job->{exe0},
