@@ -218,7 +218,6 @@ class StatementVisitor(ExpressionVisitor):
             
         # パラメータの宣言を追加
         self.xcrypt_code.append(f"    my ({', '.join(arg_names)}) = @_;")
-        self.xcrypt_code.append("    # Note: All parameters are actually passed by reference")
         
         # デフォルト値を処理
         self._process_default_parameters(args_info.args, args_info.defaults)

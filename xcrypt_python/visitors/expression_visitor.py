@@ -368,11 +368,7 @@ class ExpressionVisitor(BaseVisitor):
         
         # 関数パラメータの場合の特別処理
         if is_param and param_name:
-            var_type = self.variable_types.get(param_name, "scalar")
-            if var_type == "dict" and is_string_key:
-                return f"${param_name}->{{{index}}}"
-            else:
-                return f"${param_name}[{index}]"
+            return f"${param_name}->{{{index}}}"
         
         # 通常の変数
         value = self._expr_to_str(expr.value)
